@@ -28,6 +28,7 @@ struct Feature {
         case tabA(TabAFeature.Action)
         case tabB(TabBFeature.Action)
         case tabC(TabCFeature.Action)
+        case switchTab(State.Tab)
     }
     
     var body: some Reducer<State, Action> {
@@ -46,7 +47,13 @@ struct Feature {
     
     private func core(_ state: inout State, action: Action) -> Effect<Action> {
         switch action {
-        default: break
+        case let .switchTab(tab):
+            return .run { send in
+                await send(.set(\.activeTab, tab))
+            }
+            
+        default:
+            break
         }
         
         return .none
@@ -63,15 +70,15 @@ struct ContentView: View {
         NavigationSplitView {
             List(selection: $store.activeTab) {
                 Section("A Section") {
-                    NavigationLink("Tab A", value: Feature.State.Tab.tabA)
+                    navigationLink("Tab A", value: Feature.State.Tab.tabA)
                 }
                 
                 Section("B Section") {
-                    NavigationLink("Tab B", value: Feature.State.Tab.tabB)
+                    navigationLink("Tab B", value: Feature.State.Tab.tabB)
                 }
                 
                 Section("C Section") {
-                    NavigationLink("Tab C", value: Feature.State.Tab.tabC)
+                    navigationLink("Tab C", value: Feature.State.Tab.tabC)
                 }
             }
         } detail: {
@@ -88,6 +95,39 @@ struct ContentView: View {
                 }
             }
         }
+    }
+    
+    @ViewBuilder
+    func navigationLink(
+        _ title: String,
+        value: Feature.State.Tab
+    ) -> some View {
+        WorkaroundNavigationLink(title, value: value) {
+            store.send(.switchTab(value))
+        }
+    }
+    
+}
+
+struct WorkaroundNavigationLink<Value: Hashable>: View {
+    
+    let title: String
+    
+    let value: Value
+    
+    let action: () -> Void
+    
+    init(_ title: String, value: Value, action: @escaping () -> Void) {
+        self.title = title
+        self.value = value
+        self.action = action
+    }
+    
+    var body: some View {
+        Button(title) {
+            action()
+        }
+        .tag(value)
     }
     
 }
