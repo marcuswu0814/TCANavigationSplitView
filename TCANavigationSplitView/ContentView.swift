@@ -102,30 +102,8 @@ struct ContentView: View {
         _ title: String,
         value: Feature.State.Tab
     ) -> some View {
-        WorkaroundNavigationLink(title, value: value) {
-            store.send(.switchTab(value))
-        }
-    }
-    
-}
-
-struct WorkaroundNavigationLink<Value: Hashable>: View {
-    
-    let title: String
-    
-    let value: Value
-    
-    let action: () -> Void
-    
-    init(_ title: String, value: Value, action: @escaping () -> Void) {
-        self.title = title
-        self.value = value
-        self.action = action
-    }
-    
-    var body: some View {
         Button(title) {
-            action()
+            store.send(.switchTab(value))
         }
         .tag(value)
     }
